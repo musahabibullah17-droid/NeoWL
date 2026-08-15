@@ -1,18 +1,17 @@
-# 🍿 MUZLIX (NontonDesktop)
+# 🍿 NeoWL (NontonDesktop)
 
-![Muzlix Desktop App](https://img.shields.io/badge/Status-Private_Beta-red) ![Tech Stack](https://img.shields.io/badge/Stack-Electron%20%7C%20React%20%7C%20Node.js-blue)
+![NeoWL Desktop App](https://img.shields.io/badge/Status-Private_Beta-red) ![Tech Stack](https://img.shields.io/badge/Stack-Electron%20%7C%20React%20%7C%20Node.js-blue)
 
-**MUZLIX** (sebelumnya NontonDesktop) adalah aplikasi dekstop berbasis Electron dan React yang memungkinkan pengguna untuk melakukan *streaming* film bersubtitle Indonesia dengan antarmuka sinematik premium bergaya Netflix dipadukan dengan desain *Glassmorphism* modern.
+**NeoWL** (sebelumnya NontonDesktop / MUZLIX) adalah aplikasi dekstop berbasis Electron dan React yang memungkinkan pengguna untuk melakukan *streaming* film bersubtitle Indonesia dengan antarmuka sinematik premium bergaya Netflix dipadukan dengan desain *Glassmorphism* modern.
 
 > **⚠️ PERHATIAN PENTING (SECURITY NOTICE)**
 > Aplikasi dekstop ini dibuat **EKSKLUSIF** untuk keperluan pembelajaran developer utama, **Musa Habibulloh Al Faruq**. 
-> Tolong JANGAN menyebarluaskan aplikasi ini selain untuk kepentingan *tester* dan *survey* internal dari pihak developer. Aplikasi ini dilindungi oleh *Security Lock Screen* sebelum dapat diakses.
+> Tolong JANGAN menyebarluaskan aplikasi ini selain untuk kepentingan *tester* dan *survey* internal dari pihak developer.
 
 ---
 
 ## ✨ Fitur Utama
 
-- 🔒 **Security Lock System**: Akses aplikasi dikunci untuk memastikan hanya *tester* berwenang yang dapat menggunakannya.
 - 🎨 **Premium Cinematic UI**: Desain mode gelap pekat (Dark Mode) yang terinspirasi dari antarmuka Netflix, lengkap dengan navigasi halaman (Pagination) yang sangat mulus.
 - 📺 **Dribbble-Style Player**: Pemutar video (Video Player) tidak lagi konvensional! Hadir dengan *floating card* bergaya *glassmorphism* modern, lengkap dengan tombol lapis gradasi merah yang cantik.
 - 🕵️ **Cloudflare Bypass Search**: Fitur pencarian canggih yang memanfaatkan `BrowserWindow` tersembunyi dari Electron untuk menembus proteksi anti-bot Cloudflare, menjamin pencarian film selalu berhasil.
@@ -55,10 +54,8 @@ Untuk menjalankan Backend, Vite (Frontend), dan Electron secara bersamaan:
 npm run dev
 ```
 
-### 4. Akses Masuk
-Saat aplikasi terbuka, Anda akan dihadapkan pada layar *Security Lock*. Silakan masukkan kata sandi khusus *tester*:
-**Sandi:** `musaganteng123`
-
+### 4. Akses
+Saat aplikasi terbuka, aplikasi akan langsung menampilkan halaman utama tanpa memerlukan kata sandi.
 ---
 
 ## 👨‍💻 Pengembang

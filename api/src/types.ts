@@ -6,6 +6,7 @@ export interface IMovies {
     type: 'movie' | 'series';
     posterImg: string;
     rating: string;
+    year: string;
     url: string;
     qualityResolution: string;
     genres: string[];

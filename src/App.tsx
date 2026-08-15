@@ -1,13 +1,17 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
-import { Search, Play, Star, Plus, TrendingUp, Menu, Film, MonitorPlay, ChevronLeft, Heart, MessageSquare, Code, Download, Lock } from 'lucide-react';
+import { Search, Play, Star, Plus, TrendingUp, Menu, Film, MonitorPlay, ChevronLeft, Heart, MessageSquare, Code, Download, History } from 'lucide-react';
 
 const API_BASE_URL = 'http://localhost:8081';
 
+// Helper to extract a 4-digit year from a date string like "25 Dec 2022" or "2022"
+function extractYear(dateStr?: string): string {
+  if (!dateStr) return '';
+  const match = dateStr.match(/(\d{4})/);
+  return match ? match[1] : '';
+}
+
 export default function App() {
-  const [isUnlocked, setIsUnlocked] = useState(false);
-  const [passwordInput, setPasswordInput] = useState('');
-  const [passwordError, setPasswordError] = useState(false);
 
   const [movies, setMovies] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
@@ -29,6 +33,7 @@ export default function App() {
   const [genres, setGenres] = useState([]);
   const [activeTab, setActiveTab] = useState('popular');
   const [activeGenre, setActiveGenre] = useState('');
+  const [activeNav, setActiveNav] = useState('home');
 
   useEffect(() => {
     const handleContextMenu = (e: any) => e.preventDefault();
@@ -38,36 +43,38 @@ export default function App() {
     };
   }, []);
 
+  // Load data immediately on mount — no health check needed
   useEffect(() => {
-    if (!isUnlocked) return;
-
     let isMounted = true;
+
     const fetchInitialData = async () => {
       setLoading(true);
-      let retries = 6;
-      while (retries > 0 && isMounted) {
+      
+      // Genres are instant (static JSON), fetch them immediately
+      fetchGenres();
+      
+      // Movies may need retries if the backend is still starting
+      const maxRetries = 8;
+      for (let attempt = 1; attempt <= maxRetries; attempt++) {
+        if (!isMounted) return;
         try {
-          await axios.get(`${API_BASE_URL}/genres`);
-          if (isMounted) {
-            fetchGenres();
-            fetchMovies(1);
-          }
-          break;
+          await fetchMovies(1);
+          return; // success, stop retrying
         } catch (err) {
-          retries--;
-          if (retries > 0) {
-            await new Promise(r => setTimeout(r, 1000));
-          } else if (isMounted) {
-            setLoading(false);
+          if (!isMounted) return;
+          if (attempt < maxRetries) {
+            await new Promise(r => setTimeout(r, Math.min(500 * attempt, 2000)));
           }
         }
       }
+      // All retries failed
+      if (isMounted) setLoading(false);
     };
 
     fetchInitialData();
 
     return () => { isMounted = false; };
-  }, [isUnlocked]);
+  }, []);
 
   const fetchGenres = async () => {
     try {
@@ -82,16 +89,31 @@ export default function App() {
     }
   };
 
-  const fetchMovies = async (pageNum = 1, genre = activeGenre) => {
+  const fetchMovies = async (pageNum = 1, genre = activeGenre, tab = activeTab, nav = activeNav) => {
     try {
       setLoading(true);
       
-      let url = `${API_BASE_URL}/popular/movies?page=${pageNum}`;
-      if (genre && genre !== 'All' && genre !== '') {
-        url = `${API_BASE_URL}/genres/${genre.toLowerCase()}?page=${pageNum}`;
+      if (tab === 'history') {
+        const history = JSON.parse(localStorage.getItem('neowl_history') || '[]');
+        setMovies(history);
+        setHasMore(false);
+        setLoading(false);
+        return;
       }
       
-      const response = await axios.get(url);
+      let endpointType = nav === 'series' ? 'series' : 'movies';
+      
+      let url = `${API_BASE_URL}/popular/${endpointType}?page=${pageNum}`;
+      
+      if (genre && genre !== 'All' && genre !== '') {
+        url = `${API_BASE_URL}/genres/${genre.toLowerCase()}?page=${pageNum}`;
+      } else {
+        if (tab === 'popular') url = `${API_BASE_URL}/popular/${endpointType}?page=${pageNum}`;
+        else if (tab === 'premium') url = `${API_BASE_URL}/top-rated/${endpointType}?page=${pageNum}`;
+        else if (tab === 'recent') url = `${API_BASE_URL}/recent-release/${endpointType}?page=${pageNum}`;
+      }
+      
+      const response = await axios.get(url, { timeout: 10000 });
       const data = response.data.data || response.data || [];
       const newMovies = Array.isArray(data) ? data : [];
       
@@ -100,17 +122,32 @@ export default function App() {
         if (pageNum === 1) setMovies([]);
       } else {
         setHasMore(true);
-        setMovies(newMovies); // Replace current movies instead of appending
+        setMovies(newMovies);
         setPage(pageNum);
       }
     } catch (error) {
       console.error("Error fetching movies:", error);
+      if (pageNum === 1) setMovies([]);
+      throw error; // Re-throw so startup retry logic can catch and retry
     } finally {
       setLoading(false);
     }
   };
 
-  const handleSearch = async (e, pageNum = 1) => {
+  useEffect(() => {
+    const delayDebounceFn = setTimeout(() => {
+      if (searchQuery.trim()) {
+        handleSearch(null, 1);
+      } else if (movies.length === 0 || activeTab === 'history') {
+        fetchMovies(1);
+      }
+    }, 800);
+
+    return () => clearTimeout(delayDebounceFn);
+  }, [searchQuery]);
+      
+
+  const handleSearch = async (e: any, pageNum = 1) => {
     if (e && e.preventDefault) e.preventDefault();
     if (!searchQuery.trim()) {
       fetchMovies(1);
@@ -121,30 +158,25 @@ export default function App() {
       if (pageNum === 1) setLoading(true);
       else setLoadingMore(true);
 
-      // Bypass backend for search to avoid Cloudflare blocks, fetch directly via Electron hidden window
-      let rawData = [];
-      const electron = (window as any).require ? (window as any).require('electron') : null;
-      if (electron && electron.ipcRenderer) {
-        const response = await electron.ipcRenderer.invoke('search-movies', searchQuery, pageNum);
-        rawData = response.data || [];
-      } else {
-        const response = await axios.get(`https://gudangvape.com/search.php?s=${encodeURIComponent(searchQuery)}&page=${pageNum}`);
-        rawData = response.data.data || [];
-      }
+      const response = await axios.get(`${API_BASE_URL}/search/${encodeURIComponent(searchQuery)}?page=${pageNum}`, { timeout: 15000 });
+      let rawData = response.data || [];
       
-      const newMovies = Array.isArray(rawData) ? rawData.map((item: any) => ({
-        _id: item.slug || '',
-        title: item.title || '',
-        type: item.type === 'series' ? 'series' : 'movie',
-        posterImg: item.poster ? `https://poster.showcdnx.com/wp-content/uploads/${item.poster}` : ''
-      })) : [];
+      let newMovies = Array.isArray(rawData) ? rawData : [];
+      
+      // Filter search results based on the active navigation tab
+      if (activeNav === 'series') {
+        newMovies = newMovies.filter(item => item.type === 'series');
+      } else if (activeNav === 'movies') {
+        newMovies = newMovies.filter(item => item.type === 'movie');
+      }
       
       if (newMovies.length === 0) {
         setHasMore(false);
         if (pageNum === 1) setMovies([]);
       } else {
         setHasMore(true);
-        setMovies(newMovies); // Replace movies for pagination
+        if (pageNum === 1) setMovies(newMovies);
+        else setMovies((prev: any) => [...prev, ...newMovies]);
         setPage(pageNum);
       }
     } catch (error) {
@@ -196,6 +228,21 @@ export default function App() {
       }
 
       setMovieDetails(details);
+      
+      // Save to history
+      const historyItem = {
+        _id: details._id || movieId,
+        title: details.title,
+        posterImg: details.posterImg || details.poster,
+        type: endpointPrefix === 'series' ? 'series' : 'movie',
+        rating: details.rating,
+        year: details.year || '',
+        timestamp: Date.now()
+      };
+      
+      const existingHistory = JSON.parse(localStorage.getItem('neowl_history') || '[]');
+      const updatedHistory = [historyItem, ...existingHistory.filter((h: any) => h._id !== historyItem._id)].slice(0, 50);
+      localStorage.setItem('neowl_history', JSON.stringify(updatedHistory));
     } catch (error) {
       console.error("Error fetching movie details:", error);
     } finally {
@@ -225,57 +272,7 @@ export default function App() {
     setSelectedEpisode(1);
   };
 
-  const handleUnlock = (e: any) => {
-    e.preventDefault();
-    if (passwordInput === 'musaganteng123') {
-      setIsUnlocked(true);
-    } else {
-      setPasswordError(true);
-    }
-  };
-
   const featuredMovie = movies.length > 0 ? movies[0] : null;
-
-  if (!isUnlocked) {
-    return (
-      <div className="min-h-screen w-full bg-[#000000] text-gray-100 flex flex-col relative overflow-hidden font-sans items-center justify-center p-6">
-        <div className="absolute inset-0 z-0 opacity-40 pointer-events-none overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-to-br from-[#1a0505] via-[#000000] to-[#0a0000]"></div>
-        </div>
-        
-        <div className="relative z-10 w-full max-w-lg bg-[#121212] p-8 md:p-12 rounded-[2.5rem] shadow-[0_30px_60px_rgba(0,0,0,0.8)] border border-gray-800 flex flex-col items-center text-center">
-           <div className="bg-[#e50914] p-4 rounded-full shadow-[0_10px_20px_rgba(229,9,20,0.3)] mb-6">
-              <Lock size={32} className="text-white" />
-           </div>
-           
-           <h1 className="text-2xl font-black mb-4 tracking-wider uppercase text-white">Security Lock</h1>
-           
-           <p className="text-gray-400 text-sm md:text-base leading-relaxed mb-10">
-              Aplikasi dekstop untuk menonton movie bersubtitle indonesia ini dibuat untuk pembelajaran developer <strong className="text-white">Musa Habibulloh Al Faruq</strong>, tolong jangan menyebar luaskan aplikasi ini selain kepentingan tester dan survey dari developer.
-           </p>
-
-           <form onSubmit={handleUnlock} className="w-full flex flex-col gap-5">
-              <div>
-                 <input 
-                   type="password" 
-                   value={passwordInput}
-                   onChange={(e) => { setPasswordInput(e.target.value); setPasswordError(false); }}
-                   placeholder="Masukkan sandi khusus..."
-                   className={`w-full bg-[#0a0a0a] border ${passwordError ? 'border-red-500 focus:border-red-500' : 'border-gray-700 focus:border-[#e50914]'} text-white px-6 py-4 rounded-xl text-sm focus:outline-none transition-colors text-center font-medium tracking-widest`}
-                 />
-                 {passwordError && <p className="text-red-500 text-xs mt-3 font-semibold">Sandi salah, silakan coba lagi.</p>}
-              </div>
-              <button 
-                type="submit"
-                className="w-full bg-gradient-to-r from-[#e50914] to-[#ff5b73] text-white font-bold tracking-widest uppercase py-4 rounded-xl shadow-[0_10px_20px_rgba(229,9,20,0.3)] hover:scale-[1.02] transition-transform"
-              >
-                Masuk
-              </button>
-           </form>
-        </div>
-      </div>
-    );
-  }
 
   if (selectedMovie) {
     return (
@@ -304,7 +301,7 @@ export default function App() {
         
         {/* Vertical watermark text */}
         <div className="hidden lg:block absolute left-12 top-1/2 -translate-y-1/2 -rotate-90 text-gray-700 tracking-[0.3em] text-xs font-bold z-20 origin-center whitespace-nowrap">
-          by MUZLIX
+          by NeoWL
         </div>
 
         <div className="relative z-10 p-6 md:p-12 lg:p-16 flex-1 flex flex-col items-center justify-center max-w-[1400px] mx-auto w-full min-h-screen">
@@ -328,7 +325,7 @@ export default function App() {
                   {movieDetails.title}
                 </h1>
                 <p className="text-white/90 font-medium text-sm md:text-base tracking-wide drop-shadow-md">
-                  {movieDetails.year || '2026'} • {movieDetails.rating || 'N/A'} • {(movieDetails.genres || []).join(', ')}
+                  {extractYear(movieDetails.releaseDate) || movieDetails.year || ''} • {movieDetails.rating || 'N/A'} • {(movieDetails.genres || []).join(', ')}
                 </p>
               </div>
 
@@ -482,14 +479,12 @@ export default function App() {
       <header className="absolute top-0 left-0 right-0 z-50 p-6 md:px-12 flex justify-between items-center bg-gradient-to-b from-black/90 via-black/50 to-transparent">
         <div className="flex items-center gap-12">
           <h1 className="text-[#e50914] text-3xl md:text-4xl font-black tracking-tighter uppercase cursor-pointer">
-            MUZLIX
+            NeoWL
           </h1>
           <nav className="hidden lg:flex gap-8 text-gray-300 font-semibold text-sm">
-            <a href="#" className="text-white transition-colors">Home</a>
-            <a href="#" className="hover:text-white transition-colors">Profil</a>
-            <a href="#" className="hover:text-white transition-colors">Drama</a>
-            <a href="#" className="hover:text-white transition-colors">Movie</a>
-            <a href="#" className="hover:text-white transition-colors">Help</a>
+            <button onClick={() => { setActiveNav('home'); setActiveGenre(''); setActiveTab('popular'); fetchMovies(1, '', 'popular', 'home'); }} className={`transition-colors py-1 ${activeNav === 'home' ? 'text-white border-b-2 border-[#e50914]' : 'hover:text-white'}`}>Home</button>
+            <button onClick={() => { setActiveNav('series'); setActiveGenre(''); setActiveTab('popular'); fetchMovies(1, '', 'popular', 'series'); }} className={`transition-colors py-1 ${activeNav === 'series' ? 'text-white border-b-2 border-[#e50914]' : 'hover:text-white'}`}>Series</button>
+            <button onClick={() => { setActiveNav('movies'); setActiveGenre(''); setActiveTab('popular'); fetchMovies(1, '', 'popular', 'movies'); }} className={`transition-colors py-1 ${activeNav === 'movies' ? 'text-white border-b-2 border-[#e50914]' : 'hover:text-white'}`}>Movies</button>
           </nav>
         </div>
         <div className="flex items-center gap-4 md:gap-8">
@@ -525,8 +520,8 @@ export default function App() {
             
             <div className="absolute bottom-[15%] md:bottom-[20%] left-6 md:left-12 lg:left-24 max-w-3xl z-10">
               <p className="text-gray-300 font-bold flex items-center gap-2 mb-3 text-xs md:text-sm tracking-widest uppercase">
-                <span className="text-yellow-500 flex items-center gap-1"><Star size={14} fill="currentColor"/> {featuredMovie.rating || '9.1'}</span> 
-                <span>|</span> {featuredMovie.year || '2026'} <span>|</span> Exciting Story <span>|</span> 2 Season
+                <span className="text-yellow-500 flex items-center gap-1"><Star size={14} fill="currentColor"/> {featuredMovie.rating || 'N/A'}</span> 
+                {(extractYear(featuredMovie.releaseDate) || featuredMovie.year) && <><span>|</span> {extractYear(featuredMovie.releaseDate) || featuredMovie.year}</>} <span>|</span> {featuredMovie.type === 'series' ? 'Series' : 'Movie'}
               </p>
               <h1 className="text-5xl md:text-7xl lg:text-8xl font-black text-white mb-6 tracking-tighter uppercase drop-shadow-2xl line-clamp-2 leading-none">
                 {featuredMovie.title}
@@ -567,23 +562,29 @@ export default function App() {
           </div>
           <div className="flex gap-6 text-sm font-semibold text-gray-500">
             <button 
-               onClick={() => setActiveTab('popular')}
+               onClick={() => { setActiveTab('popular'); setActiveGenre(''); fetchMovies(1, '', 'popular'); }}
                className={`flex items-center gap-2 transition-colors ${activeTab === 'popular' ? 'text-white' : 'hover:text-gray-300'}`}
             >
                {activeTab === 'popular' ? <div className="w-2 h-2 rounded-full bg-[#e50914]"></div> : <TrendingUp size={16} />} 
                Popular
             </button>
             <button 
-               onClick={() => setActiveTab('premium')}
+               onClick={() => { setActiveTab('premium'); setActiveGenre(''); fetchMovies(1, '', 'premium'); }}
                className={`flex items-center gap-2 transition-colors ${activeTab === 'premium' ? 'text-white' : 'hover:text-gray-300'}`}
             >
                <Star size={16} className={activeTab === 'premium' ? 'text-[#e50914]' : ''} /> Premium
             </button>
             <button 
-               onClick={() => setActiveTab('recent')}
+               onClick={() => { setActiveTab('recent'); setActiveGenre(''); fetchMovies(1, '', 'recent'); }}
                className={`flex items-center gap-2 transition-colors ${activeTab === 'recent' ? 'text-white' : 'hover:text-gray-300'}`}
             >
                <Plus size={16} className={activeTab === 'recent' ? 'text-[#e50914]' : ''} /> Recently Added
+            </button>
+            <button 
+               onClick={() => { setActiveTab('history'); setActiveGenre(''); fetchMovies(1, '', 'history'); }}
+               className={`flex items-center gap-2 transition-colors ${activeTab === 'history' ? 'text-white' : 'hover:text-gray-300'}`}
+            >
+               <History size={16} className={activeTab === 'history' ? 'text-[#e50914]' : ''} /> History
             </button>
           </div>
         </div>
@@ -651,7 +652,7 @@ export default function App() {
                         {movie.title}
                       </h3>
                       <div className="flex justify-between items-center text-xs font-semibold text-gray-400">
-                        <span>{movie.year || '2026'}</span>
+                        <span>{extractYear(movie.releaseDate) || movie.year || ''}</span>
                         <div className="flex items-center gap-1">
                            <Star size={12} fill="currentColor" className="text-[#e50914]" /> 
                            <span className="text-yellow-500">{rating}</span>
@@ -694,43 +695,6 @@ export default function App() {
         )}
       </main>
 
-      {/* FOOTER */}
-      <footer className="border-t border-gray-900 bg-[#0a0a0a] pt-12 pb-8 px-6 md:px-12 lg:px-24">
-         <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-8 text-sm text-gray-400 mb-12">
-            <div className="flex flex-col gap-2">
-               <h4 className="text-white font-bold mb-2">Resource</h4>
-               <a href="#" className="hover:text-white transition-colors">About Blockbuster</a>
-               <a href="#" className="hover:text-white transition-colors">Contact Us, Forums</a>
-               <a href="#" className="hover:text-white transition-colors">ON Movie Indonesia</a>
-               <a href="#" className="hover:text-white transition-colors">Blog, Help Center</a>
-            </div>
-            <div className="flex flex-col gap-2">
-               <h4 className="text-white font-bold mb-2">Legal</h4>
-               <a href="#" className="hover:text-white transition-colors">Terms Of Use</a>
-               <a href="#" className="hover:text-white transition-colors">Privacy Policy</a>
-               <a href="#" className="hover:text-white transition-colors">Security</a>
-            </div>
-            <div className="flex flex-col gap-2">
-               <h4 className="text-white font-bold mb-2">Account</h4>
-               <a href="#" className="hover:text-white transition-colors">My Account</a>
-               <a href="#" className="hover:text-white transition-colors">Watchlist</a>
-               <a href="#" className="hover:text-white transition-colors">Collections</a>
-               <a href="#" className="hover:text-white transition-colors">User Guide</a>
-            </div>
-            <div className="flex flex-col gap-2 col-span-2 md:col-span-1 lg:col-span-2">
-               <h4 className="text-white font-bold mb-2">NewsLetter</h4>
-               <p className="text-gray-500 text-xs mb-4">Subscribe to our newsletter system now to get latest news from us.</p>
-               <div className="flex">
-                  <input type="text" placeholder="Email Address" className="bg-[#141414] border border-gray-800 rounded-l-md px-4 py-2 w-full text-white focus:outline-none focus:border-[#e50914]" />
-                  <button className="bg-[#e50914] text-white px-4 py-2 rounded-r-md font-bold text-xs uppercase tracking-wider">Subscribe</button>
-               </div>
-            </div>
-         </div>
-         <div className="flex flex-col md:flex-row justify-between items-center text-xs text-gray-600 border-t border-gray-900 pt-8">
-            <p>IDN Netflix Indonesia - Call us (+62) 823 4567 8910</p>
-            <p>©2026 NontonDesktop. All Right Reserved.</p>
-         </div>
-      </footer>
 
     </div>
   );

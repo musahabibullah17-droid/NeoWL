@@ -1,4 +1,4 @@
-import axios from 'axios';
+import { httpClient } from '@/httpClient';
 import { NextFunction as Next, Request, Response } from 'express';
 import { scrapeSeries, scrapeSeriesDetails } from '@/scrapers/series';
 
@@ -14,13 +14,13 @@ export const latestSeries: TController = async (req, res) => {
     try {
         const { page = 0 } = req.query;
 
-        const axiosRequest = await axios.get(
+        const axiosRequest = await httpClient.get(
             `${process.env.ND_URL}/latest-series${
                 Number(page) > 1 ? `/page/${page}` : ''
             }`
         );
 
-        const payload = await scrapeSeries(req, axiosRequest);
+        const payload = await scrapeSeries(req, axiosRequest as any);
 
         res.status(200).json(payload);
     } catch (err) {
@@ -40,13 +40,13 @@ export const popularSeries: TController = async (req, res) => {
     try {
         const { page = 0 } = req.query;
 
-        const axiosRequest = await axios.get(
+        const axiosRequest = await httpClient.get(
             `${process.env.ND_URL}/populer${
                 Number(page) > 1 ? `/page/${page}` : ''
             }`
         );
 
-        const payload = await scrapeSeries(req, axiosRequest);
+        const payload = await scrapeSeries(req, axiosRequest as any);
 
         res.status(200).json(payload);
     } catch (err) {
@@ -66,13 +66,13 @@ export const recentReleaseSeries: TController = async (req, res) => {
     try {
         const { page = 0 } = req.query;
 
-        const axiosRequest = await axios.get(
+        const axiosRequest = await httpClient.get(
             `${process.env.ND_URL}/release${
                 Number(page) > 1 ? `/page/${page}` : ''
             }`
         );
 
-        const payload = await scrapeSeries(req, axiosRequest);
+        const payload = await scrapeSeries(req, axiosRequest as any);
 
         res.status(200).json(payload);
     } catch (err) {
@@ -92,13 +92,13 @@ export const topRatedSeries: TController = async (req, res) => {
     try {
         const { page = 0 } = req.query;
 
-        const axiosRequest = await axios.get(
+        const axiosRequest = await httpClient.get(
             `${process.env.ND_URL}/rating${
                 Number(page) > 1 ? `/page/${page}` : ''
             }`
         );
 
-        const payload = await scrapeSeries(req, axiosRequest);
+        const payload = await scrapeSeries(req, axiosRequest as any);
 
         res.status(200).json(payload);
     } catch (err) {
@@ -118,9 +118,9 @@ export const seriesDetails: TController = async (req, res) => {
     try {
         const { id } = req.params;
 
-        const axiosRequest = await axios.get(`${process.env.ND_URL}/${id}`);
+        const axiosRequest = await httpClient.get(`${process.env.ND_URL}/${id}`);
 
-        const payload = await scrapeSeriesDetails(req, axiosRequest);
+        const payload = await scrapeSeriesDetails(req, axiosRequest as any);
 
         res.status(200).json(payload);
     } catch (err) {

@@ -12,8 +12,8 @@
     "electron:build": "npm run build --prefix api && vite build && electron-builder"
   },
   "build": {
-    "appId": "com.muzlix.app",
-    "productName": "Muzlix",
+    "appId": "com.neowl.app",
+    "productName": "NeoWL",
     "directories": {
       "output": "release"
     },

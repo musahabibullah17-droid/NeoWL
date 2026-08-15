@@ -17,7 +17,7 @@ function startBackend() {
           PORT: 8081
         }
       });
-      console.log('Started local API process for Muzlix');
+      console.log('Started local API process for NeoWL');
     } catch (e) {
       console.error('Failed to start API:', e);
     }
@@ -31,7 +31,7 @@ function createWindow() {
   mainWindow = new BrowserWindow({
     width: 1280,
     height: 720,
-    title: 'MUZLIX',
+    title: 'NeoWL',
     icon: iconPath,
     webPreferences: {
       nodeIntegration: true,
@@ -114,12 +114,16 @@ app.whenReady().then(() => {
       const hiddenWindow = new BrowserWindow({
         width: 800,
         height: 600,
-        show: false,
+        show: true,
+        opacity: 0,
+        x: -2000,
+        y: -2000,
         webPreferences: {
           nodeIntegration: false,
           contextIsolation: true
         }
       });
+      hiddenWindow.webContents.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36');
 
       let isResolved = false;
 

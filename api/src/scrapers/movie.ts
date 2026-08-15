@@ -48,6 +48,16 @@ export const scrapeMovies = async (
             obj['posterImg'] = poster;
             
             obj['rating'] = parent.find('span[itemprop="ratingValue"]').text().trim() || 'N/A';
+            
+            // Extract year from figcaption meta text or quality label area
+            let yearText = '';
+            const figcaptionText = parent.find('figcaption').text();
+            const yearMatch = figcaptionText.match(/(\d{4})/);
+            if (yearMatch) {
+                yearText = yearMatch[1];
+            }
+            obj['year'] = yearText;
+            
             obj['url'] = `${protocol}://${host}/movies/${movieId}`;
             obj['qualityResolution'] = parent.find('span.label').text().trim();
             obj['genres'] = genres;
@@ -137,6 +147,16 @@ export const scrapeMovieDetails = async (
     obj['directors'] = directors;
     obj['countries'] = countries;
     obj['casts'] = casts;
+
+    // Compute year from releaseDate or JSON data
+    let yearStr = '';
+    if (jsonData.year) {
+        yearStr = String(jsonData.year);
+    } else if (releaseDate && releaseDate !== 'N/A') {
+        const ym = releaseDate.match(/(\d{4})/);
+        if (ym) yearStr = ym[1];
+    }
+    (obj as any)['year'] = yearStr;
 
     return obj;
 };
