@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 import { Search, Play, Star, Plus, TrendingUp, Menu, Film, MonitorPlay, ChevronLeft, Heart, MessageSquare, Code, Download, History } from 'lucide-react';
 
-const API_BASE_URL = 'http://localhost:8081';
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8081';
 
 // Helper to extract a 4-digit year from a date string like "25 Dec 2022" or "2022"
 function extractYear(dateStr?: string): string {
@@ -478,9 +478,12 @@ export default function App() {
       {/* HEADER */}
       <header className="absolute top-0 left-0 right-0 z-50 p-6 md:px-12 flex justify-between items-center bg-gradient-to-b from-black/90 via-black/50 to-transparent">
         <div className="flex items-center gap-12">
-          <h1 className="text-[#e50914] text-3xl md:text-4xl font-black tracking-tighter uppercase cursor-pointer">
-            NeoWL
-          </h1>
+          <img 
+            src="/neowl_logo.svg" 
+            alt="NeoWL Logo" 
+            className="h-10 cursor-pointer drop-shadow-[0_0_8px_rgba(229,9,20,0.5)] hover:scale-105 transition-transform" 
+            onClick={() => { setActiveNav('home'); setActiveGenre(''); setActiveTab('popular'); fetchMovies(1, '', 'popular', 'home'); }}
+          />
           <nav className="hidden lg:flex gap-8 text-gray-300 font-semibold text-sm">
             <button onClick={() => { setActiveNav('home'); setActiveGenre(''); setActiveTab('popular'); fetchMovies(1, '', 'popular', 'home'); }} className={`transition-colors py-1 ${activeNav === 'home' ? 'text-white border-b-2 border-[#e50914]' : 'hover:text-white'}`}>Home</button>
             <button onClick={() => { setActiveNav('series'); setActiveGenre(''); setActiveTab('popular'); fetchMovies(1, '', 'popular', 'series'); }} className={`transition-colors py-1 ${activeNav === 'series' ? 'text-white border-b-2 border-[#e50914]' : 'hover:text-white'}`}>Series</button>

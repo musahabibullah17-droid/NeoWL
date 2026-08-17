@@ -30,6 +30,17 @@
     "win": {
       "target": "nsis",
       "icon": "public/logo.png"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "allowElevation": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "NeoWL",
+      "uninstallDisplayName": "NeoWL",
+      "deleteAppDataOnUninstall": false,
+      "runAfterFinish": true
     }
   },
   "dependencies": {
@@ -42,6 +53,8 @@
   "devDependencies": {
     "@eslint/js": "^10.0.1",
     "@tailwindcss/vite": "^4.3.0",
+    "@tauri-apps/api": "^2.11.1",
+    "@tauri-apps/cli": "^2.11.4",
     "@types/node": "^24.12.3",
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
