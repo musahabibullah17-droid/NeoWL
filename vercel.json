@@ -6,16 +6,7 @@
     },
     {
       "source": "/(.*)",
-      "destination": {
-        "type": "service",
-        "service": "web"
-      }
+      "destination": "/index.html"
     }
-  ],
-  "services": {
-    "web": {
-      "root": ".",
-      "framework": "vite"
-    }
-  }
+  ]
 }
