@@ -1,23 +1,23 @@
 import axios from 'axios';
 import { NextFunction as Next, Request, Response } from 'express';
-import { scrapeMovies } from '@/scrapers/movie';
-import { scrapeSetOfYears } from '@/scrapers/year';
+import { scrapeSetOfCountries } from '../scrapers/country';
+import { scrapeMovies } from '../scrapers/movie';
 
 type TController = (req: Request, res: Response, next?: Next) => Promise<void>;
 
 /**
- * Controller for `/years` route
+ * Controller for `/countries` route
  * @param {Request} req
  * @param {Response} res
  * @param {Next} next
  */
-export const setOfYears: TController = async (req, res) => {
+export const setOfCountries: TController = async (req, res) => {
     try {
         const axiosRequest = await axios.get(
             `${process.env.LK21_URL}/rekomendasi-film-pintar`
         );
 
-        const payload = await scrapeSetOfYears(req, axiosRequest);
+        const payload = await scrapeSetOfCountries(req, axiosRequest);
 
         res.status(200).json(payload);
     } catch (err) {
@@ -28,18 +28,18 @@ export const setOfYears: TController = async (req, res) => {
 };
 
 /**
- * Controller for `/years/:year` route
+ * Controller for `/countries/{country}` route
  * @param {Request} req
  * @param {Response} res
  * @param {Next} next
  */
-export const moviesByYear: TController = async (req, res) => {
+export const moviesByCountry: TController = async (req, res) => {
     try {
         const { page = 0 } = req.query;
-        const { year } = req.params;
+        const { country } = req.params;
 
         const axiosRequest = await axios.get(
-            `${process.env.LK21_URL}/year/${year}${
+            `${process.env.LK21_URL}/country/${country.toLowerCase()}${
                 Number(page) > 1 ? `/page/${page}` : ''
             }`
         );

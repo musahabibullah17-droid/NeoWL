@@ -1,11 +1,21 @@
 {
-  "framework": "vite",
-  "buildCommand": "vite build",
-  "outputDirectory": "dist",
   "rewrites": [
     {
+      "source": "/api/(.*)",
+      "destination": "/api"
+    },
+    {
       "source": "/(.*)",
-      "destination": "/index.html"
+      "destination": {
+        "type": "service",
+        "service": "web"
+      }
     }
-  ]
+  ],
+  "services": {
+    "web": {
+      "root": ".",
+      "framework": "vite"
+    }
+  }
 }

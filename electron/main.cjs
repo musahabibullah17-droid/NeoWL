@@ -1,32 +1,10 @@
-const { app, BrowserWindow, session, ipcMain } = require('electron');
+const { app, BrowserWindow, session } = require('electron');
 const path = require('path');
-const { fork } = require('child_process');
 
 let mainWindow;
-let apiProcess = null;
-
-function startBackend() {
-  const isDev = !app.isPackaged;
-  if (!isDev) {
-    const apiPath = path.join(process.resourcesPath, 'app.asar.unpacked', 'api');
-    try {
-      apiProcess = fork(path.join(apiPath, 'dist', 'index.js'), [], {
-        cwd: apiPath,
-        env: {
-          ...process.env,
-          PORT: 8081
-        }
-      });
-      console.log('Started local API process for NeoWL');
-    } catch (e) {
-      console.error('Failed to start API:', e);
-    }
-  }
-}
 
 function createWindow() {
-  const isDev = !app.isPackaged;
-  const iconPath = path.join(__dirname, '..', isDev ? 'public' : 'dist', 'logo.png');
+  const iconPath = path.join(__dirname, '..', 'public', 'logo.png');
 
   mainWindow = new BrowserWindow({
     width: 1280,
@@ -36,25 +14,15 @@ function createWindow() {
     webPreferences: {
       nodeIntegration: true,
       contextIsolation: false,
-      webSecurity: false, // Optionally disable webSecurity if cross-origin issues persist
-      devTools: isDev, // Disable devtools completely in production
+      webSecurity: false, // Disable webSecurity to prevent cross-origin issues
     },
     autoHideMenuBar: true,
   });
 
-  // Completely remove the top menu to prevent accessing 'View -> Developer Tools'
   mainWindow.setMenu(null);
 
-  // Prevent keyboard shortcuts for Developer Tools in production
-  mainWindow.webContents.on('before-input-event', (event, input) => {
-    if (!isDev) {
-      if (input.key === 'F12' || (input.control && input.shift && input.key.toLowerCase() === 'i')) {
-        event.preventDefault();
-      }
-    }
-  });
-
-  // Intercept headers to bypass iframe blocking (CSP & X-Frame-Options)
+  // Intercept headers to bypass ALL iframe blocking (CSP & X-Frame-Options)
+  // This is Electron's superpower that Tauri doesn't have!
   session.defaultSession.webRequest.onHeadersReceived((details, callback) => {
     const responseHeaders = Object.assign({}, details.responseHeaders);
     
@@ -73,12 +41,12 @@ function createWindow() {
     });
   });
 
-  // Bypass Anti-Adblock popup detection by allowing the window but making it invisible and closing it instantly
+  // Bypass Anti-Adblock popup detection by allowing the window but closing it instantly
   mainWindow.webContents.setWindowOpenHandler((details) => {
     return { 
       action: 'allow',
       overrideBrowserWindowOptions: {
-        show: false, // Create popup invisibly
+        show: false,
         width: 0,
         height: 0
       }
@@ -86,19 +54,11 @@ function createWindow() {
   });
 
   mainWindow.webContents.on('did-create-window', (childWindow) => {
-    // Instantly close the invisible ad popup so the user never sees it
     childWindow.close();
   });
 
-  // Removed network-level ad blocker to prevent Anti-Adblock detection.
-  // The invisible popup closer above is enough to protect the user from intrusive ads.
-
-  if (isDev) {
-    mainWindow.loadURL('http://localhost:5173');
-    mainWindow.webContents.openDevTools();
-  } else {
-    mainWindow.loadFile(path.join(__dirname, '../dist/index.html'));
-  }
+  // Load the Vercel Production Website directly!
+  mainWindow.loadURL('https://nonton-desktop.vercel.app/');
 
   mainWindow.on('closed', () => {
     mainWindow = null;
@@ -106,54 +66,7 @@ function createWindow() {
 }
 
 app.whenReady().then(() => {
-  startBackend();
   createWindow();
-
-  ipcMain.handle('search-movies', async (event, query, page) => {
-    return new Promise((resolve) => {
-      const hiddenWindow = new BrowserWindow({
-        width: 800,
-        height: 600,
-        show: true,
-        opacity: 0,
-        x: -2000,
-        y: -2000,
-        webPreferences: {
-          nodeIntegration: false,
-          contextIsolation: true
-        }
-      });
-      hiddenWindow.webContents.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36');
-
-      let isResolved = false;
-
-      hiddenWindow.webContents.on('did-finish-load', async () => {
-        if (isResolved) return;
-        try {
-          const jsonText = await hiddenWindow.webContents.executeJavaScript('document.body.innerText');
-          const data = JSON.parse(jsonText);
-          isResolved = true;
-          resolve(data);
-          if (!hiddenWindow.isDestroyed()) hiddenWindow.close();
-        } catch (err) {
-          // If JSON parse fails, it means we are likely on a Cloudflare challenge page.
-          // Do nothing and wait for it to auto-reload.
-          console.log('Waiting for Cloudflare challenge to pass...');
-        }
-      });
-
-      // Timeout just in case Cloudflare blocks us permanently
-      setTimeout(() => {
-        if (!isResolved) {
-          isResolved = true;
-          if (!hiddenWindow.isDestroyed()) hiddenWindow.close();
-          resolve({ data: [] });
-        }
-      }, 15000);
-
-      hiddenWindow.loadURL(`https://gudangvape.com/search.php?s=${encodeURIComponent(query)}&page=${page}`);
-    });
-  });
 
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) createWindow();
@@ -161,10 +74,5 @@ app.whenReady().then(() => {
 });
 
 app.on('window-all-closed', () => {
-  if (apiProcess) {
-    try {
-      apiProcess.kill();
-    } catch (e) {}
-  }
   if (process.platform !== 'darwin') app.quit();
 });

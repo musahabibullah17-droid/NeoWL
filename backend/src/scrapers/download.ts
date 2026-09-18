@@ -1,7 +1,7 @@
 import axios from 'axios';
 import cheerio from 'cheerio';
 import { Request } from 'express';
-import { IDownloads } from '@/types';
+import { IDownloads } from '../types';
 import { AxiosResponse } from 'axios';
 
 /**

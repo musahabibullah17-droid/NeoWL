@@ -12,12 +12,11 @@ function extractYear(dateStr?: string): string {
 }
 
 export default function App() {
-
-  const [movies, setMovies] = useState([]);
+  const [movies, setMovies] = useState<any[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [loading, setLoading] = useState(true);
-  const [selectedMovie, setSelectedMovie] = useState(null);
-  const [movieDetails, setMovieDetails] = useState(null);
+  const [selectedMovie, setSelectedMovie] = useState<any>(null);
+  const [movieDetails, setMovieDetails] = useState<any>(null);
   const [detailsLoading, setDetailsLoading] = useState(false);
   const [isPlayingOverlay, setIsPlayingOverlay] = useState(false);
   const [selectedServerIndex, setSelectedServerIndex] = useState(0);
@@ -30,7 +29,7 @@ export default function App() {
   const [hasMore, setHasMore] = useState(true);
 
   // New states for the UI
-  const [genres, setGenres] = useState([]);
+  const [genres, setGenres] = useState<any[]>([]);
   const [activeTab, setActiveTab] = useState('popular');
   const [activeGenre, setActiveGenre] = useState('');
   const [activeNav, setActiveNav] = useState('home');
@@ -204,7 +203,7 @@ export default function App() {
       setSelectedEpisode(1);
       setDetailsLoading(true);
       let endpointPrefix = type === 'series' ? 'series' : 'movies';
-      let details = null;
+      let details: any = null;
 
       try {
         const response = await axios.get(`${API_BASE_URL}/${endpointPrefix}/${movieId}`);

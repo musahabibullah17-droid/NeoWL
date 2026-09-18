@@ -1,8 +1,8 @@
 import axios from 'axios';
-import { httpClient } from '@/httpClient';
+import { httpClient } from '../httpClient';
 import { NextFunction as Next, Request, Response } from 'express';
-import { scrapeMovies } from '@/scrapers/movie';
-import genres from '@/json/genres.json';
+import { scrapeMovies } from '../scrapers/movie';
+import genres from '../json/genres.json';
 
 type TController = (req: Request, res: Response, next?: Next) => Promise<void>;
 

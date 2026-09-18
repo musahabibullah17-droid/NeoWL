@@ -1,26 +1,26 @@
-import { httpClient } from '@/httpClient';
+import { httpClient } from '../httpClient';
 import { NextFunction as Next, Request, Response } from 'express';
-import { scrapeSeries, scrapeSeriesDetails } from '@/scrapers/series';
+import { scrapeMovieDetails, scrapeMovies } from '../scrapers/movie';
 
 type TController = (req: Request, res: Response, next?: Next) => Promise<void>;
 
 /**
- * Controller for `/series` route
+ * Controller for `/movies` route
  * @param {Request} req
  * @param {Response} res
  * @param {Next} next
  */
-export const latestSeries: TController = async (req, res) => {
+export const latestMovies: TController = async (req, res) => {
     try {
         const { page = 0 } = req.query;
 
         const axiosRequest = await httpClient.get(
-            `${process.env.ND_URL}/latest-series${
+            `${process.env.LK21_URL}/latest${
                 Number(page) > 1 ? `/page/${page}` : ''
             }`
         );
 
-        const payload = await scrapeSeries(req, axiosRequest as any);
+        const payload = await scrapeMovies(req, axiosRequest as any);
 
         res.status(200).json(payload);
     } catch (err) {
@@ -31,22 +31,23 @@ export const latestSeries: TController = async (req, res) => {
 };
 
 /**
- * Controller for `/popular/series` route
+ * Controller for `/popular/movies` route
  * @param {Request} req
  * @param {Response} res
  * @param {Next} next
  */
-export const popularSeries: TController = async (req, res) => {
+export const popularMovies: TController = async (req, res) => {
     try {
         const { page = 0 } = req.query;
 
         const axiosRequest = await httpClient.get(
-            `${process.env.ND_URL}/populer${
+            `${process.env.LK21_URL}/populer${
                 Number(page) > 1 ? `/page/${page}` : ''
             }`
         );
 
-        const payload = await scrapeSeries(req, axiosRequest as any);
+        // scrape popular movies
+        const payload = await scrapeMovies(req, axiosRequest as any);
 
         res.status(200).json(payload);
     } catch (err) {
@@ -57,22 +58,22 @@ export const popularSeries: TController = async (req, res) => {
 };
 
 /**
- * Controller for `/recent-release/series` route
+ * Controller for `/recent-release/movies` route
  * @param {Request} req
  * @param {Response} res
  * @param {Next} next
  */
-export const recentReleaseSeries: TController = async (req, res) => {
+export const recentReleaseMovies: TController = async (req, res) => {
     try {
         const { page = 0 } = req.query;
 
         const axiosRequest = await httpClient.get(
-            `${process.env.ND_URL}/release${
+            `${process.env.LK21_URL}/release${
                 Number(page) > 1 ? `/page/${page}` : ''
             }`
         );
 
-        const payload = await scrapeSeries(req, axiosRequest as any);
+        const payload = await scrapeMovies(req, axiosRequest as any);
 
         res.status(200).json(payload);
     } catch (err) {
@@ -83,22 +84,22 @@ export const recentReleaseSeries: TController = async (req, res) => {
 };
 
 /**
- * Controller for `/top-rated/series` route
+ * Controller for `/top-rated/movies` route
  * @param {Request} req
  * @param {Response} res
  * @param {Next} next
  */
-export const topRatedSeries: TController = async (req, res) => {
+export const topRatedMovies: TController = async (req, res) => {
     try {
         const { page = 0 } = req.query;
 
         const axiosRequest = await httpClient.get(
-            `${process.env.ND_URL}/rating${
+            `${process.env.LK21_URL}/rating${
                 Number(page) > 1 ? `/page/${page}` : ''
             }`
         );
 
-        const payload = await scrapeSeries(req, axiosRequest as any);
+        const payload = await scrapeMovies(req, axiosRequest as any);
 
         res.status(200).json(payload);
     } catch (err) {
@@ -109,18 +110,18 @@ export const topRatedSeries: TController = async (req, res) => {
 };
 
 /**
- * Controller for `/series/:seriesId` route
+ * Controller for `/movies/{movieId}` route
  * @param {Request} req
  * @param {Response} res
  * @param {Next} next
  */
-export const seriesDetails: TController = async (req, res) => {
+export const movieDetails: TController = async (req, res) => {
     try {
         const { id } = req.params;
 
-        const axiosRequest = await httpClient.get(`${process.env.ND_URL}/${id}`);
+        const axiosRequest = await httpClient.get(`${process.env.LK21_URL}/${id}`);
 
-        const payload = await scrapeSeriesDetails(req, axiosRequest as any);
+        const payload = await scrapeMovieDetails(req, axiosRequest as any);
 
         res.status(200).json(payload);
     } catch (err) {
