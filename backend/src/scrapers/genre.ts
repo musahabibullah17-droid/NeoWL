@@ -14,7 +14,7 @@ export const scrapeSetOfGenres = async (
     req: Request,
     res: AxiosResponse
 ): Promise<ISetOfGenres[]> => {
-    const $: cheerio.Root = cheerio.load(res.data);
+    const $: any = cheerio.load(res.data);
     const payload: ISetOfGenres[] = [];
     const {
         headers: { host },

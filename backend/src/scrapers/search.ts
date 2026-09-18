@@ -13,7 +13,7 @@ export const scrapeSearchedMoviesOrSeries = async (
     req: Request,
     res: AxiosResponse
 ): Promise<ISearchedMoviesOrSeries[]> => {
-    const $: cheerio.Root = cheerio.load(res.data);
+    const $: any = cheerio.load(res.data);
     const payload: ISearchedMoviesOrSeries[] = [];
     const {
         headers: { host },

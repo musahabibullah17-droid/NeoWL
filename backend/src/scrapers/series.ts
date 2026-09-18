@@ -13,7 +13,7 @@ export const scrapeSeries = async (
     req: Request,
     res: AxiosResponse
 ): Promise<ISeries[]> => {
-    const $: cheerio.Root = cheerio.load(res.data);
+    const $: any = cheerio.load(res.data);
     const payload: ISeries[] = [];
     const {
         headers: { host },
@@ -23,7 +23,7 @@ export const scrapeSeries = async (
     $('main > div.container > section.archive')
         .find('div.grid-archive > div#grid-wrapper > div.infscroll-item')
         .each((i, el) => {
-            const parent: cheerio.Cheerio = $(el).find('article.mega-item');
+            const parent: any = $(el).find('article.mega-item');
             const genres: string[] = [];
 
             $(parent)
@@ -80,7 +80,7 @@ export const scrapeSeriesDetails = async (
 ): Promise<ISeriesDetails> => {
     const { originalUrl } = req;
 
-    const $: cheerio.Root = cheerio.load(res.data);
+    const $: any = cheerio.load(res.data);
     const obj = {} as ISeriesDetails;
 
     const genres: string[] = [];
@@ -159,7 +159,7 @@ export const scrapeSeriesDetails = async (
     obj['countries'] = countries;
     obj['casts'] = casts;
 
-    const epsElem: cheerio.Cheerio = $('div.serial-wrapper > div.episode-list');
+    const epsElem: any = $('div.serial-wrapper > div.episode-list');
     const seasons: ISeasonsList[] = [];
 
     for (let i = epsElem.length; i >= 1; i--) {

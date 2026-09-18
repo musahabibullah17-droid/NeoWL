@@ -13,7 +13,7 @@ export const scrapeSetOfYears = async (
     req: Request,
     res: AxiosResponse
 ): Promise<ISetOfYears[]> => {
-    const $: cheerio.Root = cheerio.load(res.data);
+    const $: any = cheerio.load(res.data);
     const payload: ISetOfYears[] = [];
     const {
         protocol,

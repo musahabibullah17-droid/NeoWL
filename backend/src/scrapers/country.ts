@@ -14,7 +14,7 @@ export const scrapeSetOfCountries = async (
     req: Request,
     res: AxiosResponse
 ) => {
-    const $: cheerio.Root = cheerio.load(res.data);
+    const $: any = cheerio.load(res.data);
     const payload: ISetOfCountries[] = [];
     const {
         protocol,

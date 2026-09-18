@@ -14,7 +14,7 @@ export const scrapeDownloads = async (
     req: Request,
     res: AxiosResponse
 ): Promise<IDownloads[]> => {
-    const $: cheerio.Root = cheerio.load(res.data);
+    const $: any = cheerio.load(res.data);
 
     let downloads: IDownloads[] = [];
 

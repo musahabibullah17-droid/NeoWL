@@ -13,7 +13,7 @@ export const scrapeMovies = async (
     req: Request,
     res: AxiosResponse
 ): Promise<IMovies[]> => {
-    const $: cheerio.Root = cheerio.load(res.data);
+    const $: any = cheerio.load(res.data);
     const payload: IMovies[] = [];
     const {
         protocol,
@@ -23,7 +23,7 @@ export const scrapeMovies = async (
     $('div.gallery-grid')
         .find('article')
         .each((i, el) => {
-            const parent: cheerio.Cheerio = $(el);
+            const parent: any = $(el);
             const genres: string[] = parent.find('figcaption > div.genre').text().split(',').map(g => g.trim()).filter(Boolean);
 
             const movieId: string =
@@ -80,7 +80,7 @@ export const scrapeMovieDetails = async (
 ): Promise<IMovieDetails> => {
     const { originalUrl } = req;
 
-    const $: cheerio.Root = cheerio.load(res.data);
+    const $: any = cheerio.load(res.data);
     const obj = {} as IMovieDetails;
 
     const genres: string[] = [];

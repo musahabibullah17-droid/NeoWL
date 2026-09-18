@@ -13,7 +13,7 @@ export const scrapeStreamSources = async (
     req: Request,
     res: AxiosResponse
 ): Promise<IStreamSources[]> => {
-    const $: cheerio.Root = cheerio.load(res.data);
+    const $: any = cheerio.load(res.data);
     const payload: IStreamSources[] = [];
 
     $('ul#player-list > li > a').each((i, el) => {
