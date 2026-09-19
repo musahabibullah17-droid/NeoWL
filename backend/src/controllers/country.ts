@@ -39,7 +39,7 @@ export const moviesByCountry: TController = async (req, res) => {
         const { country } = req.params;
 
         const axiosRequest = await axios.get(
-            `${process.env.LK21_URL}/country/${country.toLowerCase()}${
+            `${process.env.LK21_URL}/country/${(country as string).toLowerCase()}${
                 Number(page) > 1 ? `/page/${page}` : ''
             }`
         );

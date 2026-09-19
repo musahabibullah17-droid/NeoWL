@@ -10,7 +10,7 @@ export const searchedMoviesOrSeries: TController = async (req, res) => {
 
         const rawResponse = await cloudscraper({
             method: 'GET',
-            url: `https://gudangvape.com/search.php?s=${encodeURIComponent(title)}&page=${page}`,
+            url: `https://gudangvape.com/search.php?s=${encodeURIComponent(title as string)}&page=${page}`,
             headers: {
                 Referer: `${process.env.LK21_URL || 'https://tv12.lk21official.cc'}/`
             }

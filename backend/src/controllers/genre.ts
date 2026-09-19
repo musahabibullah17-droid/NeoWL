@@ -43,7 +43,7 @@ export const moviesByGenre: TController = async (req, res) => {
         const { genre } = req.params;
 
         const axiosRequest = await httpClient.get(
-            `${process.env.LK21_URL}/genre/${genre.toLowerCase()}${
+            `${process.env.LK21_URL}/genre/${(genre as string).toLowerCase()}${
                 Number(page) > 1 ? `/page/${page}` : ''
             }`
         );
