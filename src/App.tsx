@@ -2,7 +2,17 @@ import { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 import { Search, Play, Star, Plus, TrendingUp, Menu, Film, MonitorPlay, ChevronLeft, Heart, MessageSquare, Code, Download, History } from 'lucide-react';
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8081';
+let API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8081/api';
+
+// Remove trailing slash if present
+if (API_BASE_URL.endsWith('/')) {
+  API_BASE_URL = API_BASE_URL.slice(0, -1);
+}
+
+// Automatically append /api if the URL is an absolute URL and doesn't end with /api
+if (API_BASE_URL.startsWith('http') && !API_BASE_URL.endsWith('/api')) {
+  API_BASE_URL += '/api';
+}
 
 // Helper to extract a 4-digit year from a date string like "25 Dec 2022" or "2022"
 function extractYear(dateStr?: string): string {
