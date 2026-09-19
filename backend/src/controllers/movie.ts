@@ -23,7 +23,7 @@ export const latestMovies: TController = async (req, res) => {
         const payload = await scrapeMovies(req, axiosRequest as any);
 
         res.status(200).json(payload);
-    } catch (err) {
+    } catch (err: any) {
         console.error(err);
 
         res.status(400).json({ error: err.message || err.toString() });
@@ -50,7 +50,7 @@ export const popularMovies: TController = async (req, res) => {
         const payload = await scrapeMovies(req, axiosRequest as any);
 
         res.status(200).json(payload);
-    } catch (err) {
+    } catch (err: any) {
         console.error(err);
 
         res.status(400).json({ error: err.message || err.toString() });
@@ -76,7 +76,7 @@ export const recentReleaseMovies: TController = async (req, res) => {
         const payload = await scrapeMovies(req, axiosRequest as any);
 
         res.status(200).json(payload);
-    } catch (err) {
+    } catch (err: any) {
         console.error(err);
 
         res.status(400).json({ error: err.message || err.toString() });
@@ -102,7 +102,7 @@ export const topRatedMovies: TController = async (req, res) => {
         const payload = await scrapeMovies(req, axiosRequest as any);
 
         res.status(200).json(payload);
-    } catch (err) {
+    } catch (err: any) {
         console.error(err);
 
         res.status(400).json({ error: err.message || err.toString() });
@@ -124,7 +124,7 @@ export const movieDetails: TController = async (req, res) => {
         const payload = await scrapeMovieDetails(req, axiosRequest as any);
 
         res.status(200).json(payload);
-    } catch (err) {
+    } catch (err: any) {
         console.error(err);
 
         res.status(400).json({ error: err.message || err.toString() });
