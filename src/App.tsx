@@ -50,6 +50,7 @@ export default function App() {
   const [activeTab, setActiveTab] = useState('popular');
   const [activeGenre, setActiveGenre] = useState('');
   const [activeNav, setActiveNav] = useState('home');
+  const [updateAvailable, setUpdateAvailable] = useState<any>(null);
 
   useEffect(() => {
     const handleContextMenu = (e: any) => e.preventDefault();
@@ -57,6 +58,26 @@ export default function App() {
     return () => {
       document.removeEventListener('contextmenu', handleContextMenu);
     };
+  }, []);
+
+  // Check for Desktop App Updates
+  useEffect(() => {
+    if (!isElectron) return;
+    
+    const urlParams = new URLSearchParams(window.location.search);
+    const desktopVersion = urlParams.get('desktopVersion');
+    
+    if (desktopVersion) {
+      axios.get('/desktop-version.json')
+        .then(res => {
+          const data = res.data;
+          // Simple string comparison for versions (assuming format x.y.z)
+          if (data && data.version && data.version !== desktopVersion) {
+            setUpdateAvailable(data);
+          }
+        })
+        .catch(err => console.error("Error checking for updates:", err));
+    }
   }, []);
 
   // Load data immediately on mount — no health check needed
@@ -491,8 +512,22 @@ export default function App() {
   return (
     <div className="min-h-screen w-full bg-[#000000] text-[#ffffff] flex flex-col font-sans selection:bg-[#e50914] selection:text-white">
       
+      {updateAvailable && (
+        <div className="bg-[#e50914] text-white px-4 py-2.5 text-center flex flex-col sm:flex-row justify-center items-center gap-3 z-[100] relative shadow-[0_4px_20px_rgba(229,9,20,0.4)] w-full">
+          <span className="font-medium text-sm drop-shadow-sm flex-1 sm:text-right">🚀 Pembaruan Tersedia (v{updateAvailable.version})! {updateAvailable.releaseNotes}</span>
+          <div className="flex items-center gap-3 flex-1 sm:text-left">
+            <a href={updateAvailable.downloadUrl} target="_blank" rel="noopener noreferrer" className="bg-white text-[#e50914] hover:bg-gray-100 px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider transition-colors shadow-sm">
+               Download
+            </a>
+            <button onClick={() => setUpdateAvailable(null)} className="text-white/70 hover:text-white transition-colors p-1" title="Tutup">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* HEADER */}
-      <header className="absolute top-0 left-0 right-0 z-50 p-6 md:px-12 flex justify-between items-center bg-gradient-to-b from-black/90 via-black/50 to-transparent">
+      <header className={`absolute ${updateAvailable ? 'top-12' : 'top-0'} left-0 right-0 z-50 p-6 md:px-12 flex justify-between items-center bg-gradient-to-b from-black/90 via-black/50 to-transparent transition-all duration-300`}>
         <div className="flex items-center gap-12">
           <img 
             src="/neowl_logo.svg" 

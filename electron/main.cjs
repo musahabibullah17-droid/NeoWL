@@ -57,8 +57,8 @@ function createWindow() {
     childWindow.close();
   });
 
-  // Load the Vercel Production Website directly!
-  mainWindow.loadURL('https://nonton-desktop.vercel.app/');
+  // Load the Vercel Production Website directly with version param!
+  mainWindow.loadURL(`https://nonton-desktop.vercel.app/?desktopVersion=${app.getVersion()}`);
 
   mainWindow.on('closed', () => {
     mainWindow = null;
