@@ -26,7 +26,7 @@ export const latestMovies: TController = async (req, res) => {
     } catch (err) {
         console.error(err);
 
-        res.status(400).json(null);
+        res.status(400).json({ error: err.message || err.toString() });
     }
 };
 
@@ -53,7 +53,7 @@ export const popularMovies: TController = async (req, res) => {
     } catch (err) {
         console.error(err);
 
-        res.status(400).json(null);
+        res.status(400).json({ error: err.message || err.toString() });
     }
 };
 
@@ -79,7 +79,7 @@ export const recentReleaseMovies: TController = async (req, res) => {
     } catch (err) {
         console.error(err);
 
-        res.status(400).json(null);
+        res.status(400).json({ error: err.message || err.toString() });
     }
 };
 
@@ -105,7 +105,7 @@ export const topRatedMovies: TController = async (req, res) => {
     } catch (err) {
         console.error(err);
 
-        res.status(400).json(null);
+        res.status(400).json({ error: err.message || err.toString() });
     }
 };
 
@@ -127,6 +127,6 @@ export const movieDetails: TController = async (req, res) => {
     } catch (err) {
         console.error(err);
 
-        res.status(400).json(null);
+        res.status(400).json({ error: err.message || err.toString() });
     }
 };
