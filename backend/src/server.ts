@@ -2,6 +2,11 @@ import dotenv from 'dotenv';
 
 dotenv.config();
 
+// Fallback env vars if not set in Vercel Dashboard
+process.env.LK21_URL = process.env.LK21_URL || 'https://tv12.lk21official.cc';
+process.env.ND_URL = process.env.ND_URL || 'https://tv7.nontondrama.my';
+process.env.DL_URL = process.env.DL_URL || 'https://tv12.lk21official.cc';
+
 import axios from 'axios';
 import https from 'https';
 import http from 'http';
