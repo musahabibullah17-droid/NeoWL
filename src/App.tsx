@@ -3,7 +3,11 @@ import axios from 'axios';
 import { Search, Play, Star, Plus, TrendingUp, Menu, Film, MonitorPlay, ChevronLeft, Heart, MessageSquare, Code, Download, History } from 'lucide-react';
 
 let API_BASE_URL = import.meta.env.VITE_API_URL;
-if (!API_BASE_URL) {
+const isElectron = navigator.userAgent.toLowerCase().includes(' electron/');
+
+if (isElectron) {
+  API_BASE_URL = 'http://localhost:8081/api';
+} else if (!API_BASE_URL) {
   API_BASE_URL = import.meta.env.PROD ? '/api' : 'http://localhost:8081/api';
 }
 

@@ -66,6 +66,15 @@ function createWindow() {
 }
 
 app.whenReady().then(() => {
+  // Start local backend
+  process.env.PORT = '8081';
+  try {
+    require(path.join(__dirname, '..', 'backend', 'dist', 'index.js'));
+    console.log('Local backend started successfully');
+  } catch (error) {
+    console.error('Failed to start local backend:', error);
+  }
+
   createWindow();
 
   app.on('activate', () => {
