@@ -1,5 +1,5 @@
 import { NextFunction as Next, Request, Response } from 'express';
-import cloudscraper from 'cloudscraper';
+import axios from 'axios';
 
 type TController = (req: Request, res: Response, next?: Next) => Promise<void>;
 
@@ -8,15 +8,16 @@ export const searchedMoviesOrSeries: TController = async (req, res) => {
         const { title = '' } = req.params;
         const { page = 1 } = req.query;
 
-        const rawResponse = await cloudscraper({
-            method: 'GET',
-            url: `https://gudangvape.com/search.php?s=${encodeURIComponent(title as string)}&page=${page}`,
-            headers: {
-                Referer: `${process.env.LK21_URL || 'https://tv12.lk21official.cc'}/`
+        const response = await axios.get(
+            `https://gudangvape.com/search.php?s=${encodeURIComponent(title as string)}&page=${page}`,
+            {
+                headers: {
+                    Referer: `${process.env.LK21_URL || 'https://tv12.lk21official.cc'}/`
+                }
             }
-        });
+        );
 
-        const jsonResponse = JSON.parse(rawResponse);
+        const jsonResponse = typeof response.data === 'string' ? JSON.parse(response.data) : response.data;
         const payload = (jsonResponse.data || []).map((item: any) => ({
             _id: item.slug || '',
             title: item.title || '',

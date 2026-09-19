@@ -1,13 +1,10 @@
-import cloudscraper from 'cloudscraper';
+import axios from 'axios';
 
 export const httpClient = {
     get: async (url: string) => {
         try {
-            let targetUrl = url;
-            const headers: any = {};
-
-            const html = await cloudscraper({ method: 'GET', url: targetUrl, headers });
-            return { data: html };
+            const response = await axios.get(url);
+            return { data: response.data };
         } catch (error) {
             throw error;
         }
